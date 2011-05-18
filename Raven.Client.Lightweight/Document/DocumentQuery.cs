@@ -79,6 +79,8 @@ namespace Raven.Client.Document
                 orderByFields = orderByFields,
                 groupByFields = groupByFields,
                 aggregationOp = aggregationOp,
+                filterType = filterType,
+                filterConstructorParams = filterConstructorParams,
 				includes = new HashSet<string>(includes)
             };
         }

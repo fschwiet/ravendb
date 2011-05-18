@@ -189,8 +189,15 @@ namespace Raven.Client.Document
 
         private Action<QueryResult> afterQueryExecuted;
 
-        private string filterType;
-        private object[] filterConstructorParams;
+        /// <summary>
+        /// Name of lucene filter
+        /// </summary>
+        protected string filterType;
+
+        /// <summary>
+        /// Parameter values used to construct lucene filter
+        /// </summary>
+        protected object[] filterConstructorParams;
 
 #if !SILVERLIGHT && !NET_3_5
         /// <summary>
@@ -1326,6 +1333,8 @@ If you really want to do in memory filtering on the data returned from the query
             {
                 GroupBy = groupByFields,
                 AggregationOperation = aggregationOp,
+                FilterType = filterType,
+                FilterConstructorParameters = filterConstructorParams,
                 Query = query,
                 PageSize = pageSize ?? 128,
                 Start = start,

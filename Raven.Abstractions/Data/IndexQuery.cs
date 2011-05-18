@@ -90,6 +90,16 @@ namespace Raven.Abstractions.Data
 		public Reference<int> SkippedResults { get; set; }
 
 		/// <summary>
+		/// Gets or sets the name of a Lucene filter
+		/// </summary>
+		public string FilterType;
+
+		/// <summary>
+		/// Gets or sets the lucene filter parameters
+		/// </summary>
+		public object[] FilterConstructorParameters;
+        
+		/// <summary>
 		/// Gets the index query URL.
 		/// </summary>
 		/// <param name="operationUrl">The operation URL.</param>
