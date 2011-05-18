@@ -510,8 +510,20 @@ namespace Raven.Client.Document
             return this;
         }
 
-    	/// <summary>
-    	/// Provide statistics about the query, such as total count of matching records
+        ///<summary>
+        ///  Filters the result by a Lucene filter.
+        /// </summary>
+        /// <param name="filterTypeName">The name of the filter type</param>
+        /// <param name="filterConstructorParameters">The parameters to the constructor.</param>
+        /// <returns></returns>
+        IAsyncDocumentQuery<T> IDocumentQueryBase<T, IAsyncDocumentQuery<T>>.FilterBy(string filterTypeName, params object[] filterConstructorParameters)
+        {
+            FilterBy(filterTypeName, filterConstructorParameters:filterConstructorParameters);
+            return this;
+        }
+
+        /// <summary>
+        /// Provide statistics about the query, such as total count of matching records
     	/// </summary>
     	IAsyncDocumentQuery<T> IDocumentQueryBase<T, IAsyncDocumentQuery<T>>.Statistics(out RavenQueryStatistics stats)
     	{

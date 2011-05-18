@@ -9,8 +9,6 @@ namespace Raven.Tests.Indexes
 {
     public class can_use_a_custom_Lucene_filter : LocalClientTest
     {
-        Type filterType = typeof(FieldCacheTermsFilter);
-
         [Fact]
         public void can_use_custom_filter()
         {
@@ -27,8 +25,7 @@ namespace Raven.Tests.Indexes
                 {
                     var result = session.Advanced.LuceneQuery<Tuple<string,string>>()
                         .WaitForNonStaleResultsAsOfNow()
-                        .WhereEquals("Item1", "a")
-                        //.FilterBy("FieldCacheTermsFilter", "Item1", "a")
+                        .FilterBy(typeof(FieldCacheTermsFilter).Name, "Item1", "a")
                         .First();
 
                     Assert.Equal("a", result.Item1);

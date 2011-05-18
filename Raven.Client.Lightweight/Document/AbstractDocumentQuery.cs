@@ -187,7 +187,10 @@ namespace Raven.Client.Document
             get { return theQueryText; }
         }
 
-		private Action<QueryResult> afterQueryExecuted;
+        private Action<QueryResult> afterQueryExecuted;
+
+        private string filterType;
+        private object[] filterConstructorParams;
 
 #if !SILVERLIGHT && !NET_3_5
         /// <summary>
@@ -689,7 +692,19 @@ If you really want to do in memory filtering on the data returned from the query
             aggregationOp = aggregationOperation;
         }
 
-        /// <summary>
+        ///<summary>
+        ///  Filters the result by a Lucene filter.
+        /// </summary>
+        /// <param name="filterTypeName">The name of the filter type</param>
+        /// <param name="filterConstructorParameters">The parameters to the constructor.</param>
+        /// <returns></returns>
+        public void FilterBy(string filterTypeName, params object[] filterConstructorParameters)
+        {
+            filterType = filterTypeName;
+            filterConstructorParams = filterConstructorParameters;
+        }
+
+	    /// <summary>
         ///   Simplified method for closing a clause within the query
         /// </summary>
         /// <returns></returns>

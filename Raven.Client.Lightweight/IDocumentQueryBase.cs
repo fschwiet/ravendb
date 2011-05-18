@@ -336,6 +336,14 @@ If you really want to do in memory filtering on the data returned from the query
         ///</remarks>
         TSelf GroupBy (AggregationOperation aggregationOperation, params string[] fieldsToGroupBy);
 
+        ///<summary>
+        ///  Filters the result by a Lucene filter.
+        /// </summary>
+        /// <param name="filterTypeName">The name of the filter type</param>
+        /// <param name="filterConstructorParameters">The parameters to the constructor.</param>
+        /// <returns></returns>
+        TSelf FilterBy(string filterTypeName, params object[] filterConstructorParameters);
+
 		/// <summary>
 		/// Callback to get the results of the query
 		/// </summary>

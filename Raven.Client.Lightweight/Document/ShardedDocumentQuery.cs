@@ -645,6 +645,18 @@ If you really want to do in memory filtering on the data returned from the query
 			return this;
 		}
 
+		///<summary>
+		///  Filters the result by a Lucene filter.
+		/// </summary>
+		/// <param name="filterTypeName">The name of the filter type</param>
+		/// <param name="filterConstructorParameters">The parameters to the constructor.</param>
+		/// <returns></returns>
+		public IDocumentQuery<T> FilterBy(string filterTypeName, params object[] filterConstructorParameters)
+		{
+			ApplyForAll(x => x.FilterBy(filterTypeName, filterConstructorParameters:filterConstructorParameters));
+			return this;
+		}
+
 		/// <summary>
 		/// Callback to get the results of the query
 		/// </summary>
