@@ -5,8 +5,10 @@
 //-----------------------------------------------------------------------
 using System;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using Raven.Abstractions.Extensions;
+using Raven.Json.Linq;
 
 namespace Raven.Abstractions.Data
 {
@@ -130,6 +132,20 @@ namespace Raven.Abstractions.Data
 					Uri.EscapeUriString(Uri.EscapeDataString(Cutoff.Value.ToString("o", CultureInfo.InvariantCulture)));
 				path.Append("&cutOff=").Append(cutOffAsString);
 			}
+
+			if (FilterType != null)
+			{
+				var ms = new MemoryStream();
+				RavenJArray.FromObject(FilterConstructorParameters).WriteTo(ms);
+				ms.Seek(0, SeekOrigin.Begin);
+
+				var filterParameters =
+					Uri.EscapeUriString(Uri.EscapeDataString(new StreamReader(ms).ReadToEnd()));
+
+				path.Append("&filterType=").Append(Uri.EscapeUriString(Uri.EscapeDataString(FilterType)));
+				path.Append("&filterParameters").Append(filterParameters);
+			}
+
 			var vars = GetCustomQueryStringVariables();
 
 			if (!string.IsNullOrEmpty(vars))

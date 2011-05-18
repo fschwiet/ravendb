@@ -60,7 +60,9 @@ namespace Raven.Database.Queries
 				                                	FieldsToFetch = query.FieldsToFetch,
 				                                	GroupBy = query.GroupBy,
 				                                	AggregationOperation = query.AggregationOperation,
-				                                	SortedFields = query.SortedFields,
+                                                    FilterType = query.FilterType,
+                                                    FilterConstructorParameters = query.FilterConstructorParameters,
+                                                    SortedFields = query.SortedFields,
 				                                });
 
 				if (!touchTemporaryIndexResult.Item2 ||

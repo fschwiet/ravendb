@@ -34,5 +34,10 @@ namespace Raven.Tests.Indexes
             }
         }
 
+        [Fact]
+        public void need_to_test_remote_queries()
+        {
+            throw new NotSupportedException();
+        }
     }
 }
