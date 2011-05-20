@@ -3,17 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lucene.Net.Search;
+using Raven.Client.Document;
 using Xunit;
 
 namespace Raven.Tests.Indexes
 {
-    public class can_use_a_custom_Lucene_filter : LocalClientTest
+    public class can_use_a_custom_Lucene_filter : RemoteClientTest
     {
         [Fact]
         public void can_use_custom_filter()
         {
-            using(var store = base.NewDocumentStore())
+            using (GetNewServer())
+            using (var store = new DocumentStore { Url = "http://localhost:8080" })
             {
+                store.Initialize();
+
                 using(var session = store.OpenSession())
                 {
                     session.Store(new Tuple<string, string>("a", "b"));
@@ -33,12 +37,6 @@ namespace Raven.Tests.Indexes
                     Assert.Equal("b", result.Item2);
                 }
             }
-        }
-
-        [Fact]
-        public void need_to_test_remote_queries()
-        {
-            throw new NotSupportedException();
         }
     }
 }

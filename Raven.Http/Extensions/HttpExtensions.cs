@@ -340,7 +340,9 @@ namespace Raven.Http.Extensions
 			if (filterParameters == null)
 				return null;
 
-			return RavenJToken.Parse(Uri.UnescapeDataString(filterParameters)).Value<object[]>();
+		    var unescapeDataString = Uri.UnescapeDataString(filterParameters);
+
+		    return Newtonsoft.Json.JsonConvert.DeserializeObject<object[]>(unescapeDataString);
 		}
 
 		public static Guid? GetEtag(this IHttpContext context)
