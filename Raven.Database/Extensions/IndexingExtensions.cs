@@ -40,8 +40,43 @@ namespace Raven.Database.Extensions
             }
         }
 
+        public static Analyzer GetAnalyzer(this IndexDefinition self, string name)
+        {
+            if (self.Analyzers == null)
+                return null;
+            string analyzerTypeAsString;
+            if (self.Analyzers.TryGetValue(name, out analyzerTypeAsString) == false)
+                return null;
+            return CreateAnalyzerInstance(name, analyzerTypeAsString);
+        }
+
+        public static Filter CreateFilterInstance(string filterTypeAsString, object[] constructorParameters)
+        {
+            var filterType = typeof(StandardFilter).Assembly.GetType(filterTypeAsString) ??
+                Type.GetType(filterTypeAsString);
+            if (filterType == null)
+                throw new InvalidOperationException("Cannot find filter type '" + filterTypeAsString + "'.");
+            try
+            {
+                return (Filter)Activator.CreateInstance(filterType, constructorParameters);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException(
+                    "Could not create new filter instance '" + filterTypeAsString + "', exception: " + e.Message, e);
+            }
+        }
+
         public static Filter GetFilter(this IndexQuery self)
         {
+            //  should handle case where multiple filters are defined..
+            //  why isn't Lucene.Net.Search.BooleanFilter available?
+
+            if (self.FilterType != null)
+            {
+                return CreateFilterInstance(self.FilterType, self.FilterConstructorParameters ?? new object[0]);
+            }
+
             var spatialIndexQuery = self as SpatialIndexQuery;
             if(spatialIndexQuery != null)
             {
@@ -57,16 +92,6 @@ namespace Raven.Database.Extensions
                 return dq.Filter;
             }
             return null;
-        }
-
-        public static Analyzer GetAnalyzer(this IndexDefinition self, string name)
-        {
-            if (self.Analyzers == null)
-                return null;
-            string analyzerTypeAsString;
-            if (self.Analyzers.TryGetValue(name, out analyzerTypeAsString) == false)
-                return null;
-            return CreateAnalyzerInstance(name, analyzerTypeAsString);
         }
 
         public static Field.Index GetIndex(this IndexDefinition self, string name, Field.Index defaultIndex)

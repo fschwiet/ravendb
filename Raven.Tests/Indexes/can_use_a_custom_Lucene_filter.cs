@@ -25,7 +25,8 @@ namespace Raven.Tests.Indexes
                 {
                     var result = session.Advanced.LuceneQuery<Tuple<string,string>>()
                         .WaitForNonStaleResultsAsOfNow()
-                        .FilterBy(typeof(FieldCacheTermsFilter).Name, "Item1", "a")
+                        .Where("Item1:*")
+                        .FilterBy(typeof(FieldCacheTermsFilter).FullName, "Item1", new string[]{"a"})
                         .Single();
 
                     Assert.Equal("a", result.Item1);
