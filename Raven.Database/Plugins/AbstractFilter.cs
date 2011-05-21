@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using Lucene.Net.Search;
@@ -7,10 +8,10 @@ using Raven.Json.Linq;
 
 namespace Raven.Database.Plugins
 {
-    public abstract class AbstractFilter : IRequiresDocumentDatabaseInitialization
+    [InheritedExport]
+    public abstract class AbstractFilter
     {
-        public abstract void Initialize(DocumentDatabase database);
         public abstract string GetName();
-        public abstract Filter Create(RavenJArray parameters);
+        public abstract Filter Create(RavenJArray filterArguments);
     }
 }
