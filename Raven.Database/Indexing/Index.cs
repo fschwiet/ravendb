@@ -52,7 +52,6 @@ namespace Raven.Database.Indexing
 		private IndexWriter indexWriter;
 		private IndexSearcher searcher;
 
-
 		protected Index(Directory directory, string name, IndexDefinition indexDefinition, AbstractViewGenerator viewGenerator)
 		{
 			if (directory == null) throw new ArgumentNullException("directory");
@@ -77,6 +76,9 @@ namespace Raven.Database.Indexing
 		[ImportMany]
 		public OrderedPartCollection<AbstractAnalyzerGenerator> AnalyzerGenerators { get; set; }
 
+		[ImportMany]
+		public OrderedPartCollection<AbstractFilterGenerator> FilterFactories { get; set;  }
+		
 		/// <summary>
 		/// Whatever this is a map reduce index or not
 		/// </summary>
@@ -613,10 +615,10 @@ namespace Raven.Database.Indexing
 				toDispose.Clear();
 			}
 
-			private TopDocs ExecuteQuery(IndexSearcher indexSearcher, Query luceneQuery, int start, int pageSize,
-			                             IndexQuery indexQuery)
+			private TopDocs ExecuteQuery(IndexSearcher indexSearcher, Query luceneQuery, int start, int pageSize, IndexQuery indexQuery)
 			{
-				Filter filter = indexQuery.GetFilter();
+				Filter filter = GetFilterForQuery(this.parent, indexQuery);
+
 				Sort sort = indexQuery.GetSort(filter, parent.indexDefinition);
 
 				if (pageSize == int.MaxValue) // we want all docs
@@ -631,6 +633,53 @@ namespace Raven.Database.Indexing
 					return indexSearcher.Search(luceneQuery, filter, pageSize + start, sort);
 				}
 				return indexSearcher.Search(luceneQuery, filter, pageSize + start);
+			}
+
+			public static Filter GetFilterForQuery(Index index, IndexQuery indexQuery)
+			{
+				Filter filter = indexQuery.GetFilter();
+				
+				if (!String.IsNullOrEmpty(indexQuery.FilterType))
+				{
+					if (filter != null)
+					{
+						throw new ArgumentException("FilterType specified when there is already a filter for query type " + indexQuery.GetType().Name);
+					}
+					
+					RavenJArray parameters = null;
+
+					if (!string.IsNullOrEmpty(indexQuery.FilterConstructorParametersInJson))
+					{
+						try
+						{
+							using (var textReader = new System.IO.StringReader(indexQuery.FilterConstructorParametersInJson))
+							using (var reader = new Newtonsoft.Json.JsonTextReader(textReader))
+							{
+								parameters = RavenJArray.Load(reader);
+							}
+						}
+						catch (Exception e)
+						{
+							throw new ArgumentException("Unable to deserialize filters parameters", e);
+							throw;
+						}
+					}
+
+					foreach (var filterGenerator in index.FilterFactories)
+					{
+						if (filterGenerator.Value.GetName() == indexQuery.FilterType)
+						{
+							filter = filterGenerator.Value.Create(parameters);
+							break;
+						}
+					}
+
+					if (filter == null)
+					{
+						throw new InvalidOperationException("Cannot find filter type '" + indexQuery.FilterType + "'.");
+					}
+				}
+				return filter;
 			}
 		}
 

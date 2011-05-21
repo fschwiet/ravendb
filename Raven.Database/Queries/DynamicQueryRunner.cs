@@ -61,7 +61,7 @@ namespace Raven.Database.Queries
 				                                	GroupBy = query.GroupBy,
 				                                	AggregationOperation = query.AggregationOperation,
                                                     FilterType = query.FilterType,
-                                                    FilterConstructorParameters = query.FilterConstructorParameters,
+                                                    FilterConstructorParametersInJson = query.FilterConstructorParametersInJson,
                                                     SortedFields = query.SortedFields,
 				                                });
 

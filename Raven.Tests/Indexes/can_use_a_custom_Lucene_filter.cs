@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
 using System.Linq;
 using System.Text;
 using Lucene.Net.Search;
@@ -13,7 +14,7 @@ namespace Raven.Tests.Indexes
 {
     public class can_use_a_custom_Lucene_filter : RemoteClientTest
     {
-        public class TopGradeFilters : AbstractFilter
+        public class TopGradeFiltersGenerator : AbstractFilterGenerator
         {
             public static readonly string Name = "TopGradeFilter";
 
@@ -25,16 +26,16 @@ namespace Raven.Tests.Indexes
             public override Filter Create(RavenJArray parameters)
             {
                 var term = parameters[0].Value<string>();
-                var allowedvalues = parameters[1].Value<string[]>();
+                var allowedvalues = parameters[1].Values<string>();
 
-                return new FieldCacheTermsFilter(term, allowedvalues);
+                return new FieldCacheTermsFilter(term, allowedvalues.ToArray());
             }
         }
 
         [Fact]
         public void can_use_custom_filter()
         {
-            using (GetNewServer())
+            using (GetNewServer(new TypeCatalog(typeof(TopGradeFiltersGenerator))))
             using (var store = new DocumentStore { Url = "http://localhost:8080" })
             {
                 store.Initialize();
@@ -51,7 +52,7 @@ namespace Raven.Tests.Indexes
                     var result = session.Advanced.LuceneQuery<Tuple<string,string>>()
                         .WaitForNonStaleResultsAsOfNow()
                         .Where("Item1:*")
-                        .FilterBy(TopGradeFilters.Name, "Item1", new string[]{"a"})
+                        .FilterBy(TopGradeFiltersGenerator.Name, "Item1", new string[]{"a"})
                         .Single();
 
                     Assert.Equal("a", result.Item1);

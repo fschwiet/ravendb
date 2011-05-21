@@ -22,7 +22,7 @@ namespace Raven.Database.Extensions
                 Start = context.GetStart(),
                 Cutoff = context.GetCutOff(),
                 FilterType = context.GetFilterType(),
-                FilterConstructorParameters = context.GetFilterConstructorParameters(),
+                FilterConstructorParametersInJson = context.GetFilterConstructorParameters(),
                 PageSize = context.GetPageSize(maxPageSize),
                 SkipTransformResults = context.GetSkipTransformResults(),
                 FieldsToFetch = context.Request.QueryString.GetValues("fetch"),

@@ -443,7 +443,7 @@ namespace Raven.Client.Document
                 groupByFields = groupByFields,
                 aggregationOp = aggregationOp,
                 filterType = filterType,
-                filterConstructorParams = filterConstructorParams
+                filterConstructorParamsInJson = filterConstructorParamsInJson
             }; 
         }
 

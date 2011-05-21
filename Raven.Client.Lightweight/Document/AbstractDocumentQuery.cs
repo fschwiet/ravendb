@@ -197,7 +197,7 @@ namespace Raven.Client.Document
         /// <summary>
         /// Parameter values used to construct lucene filter
         /// </summary>
-        protected object[] filterConstructorParams;
+        protected string filterConstructorParamsInJson;
 
 #if !SILVERLIGHT && !NET_3_5
         /// <summary>
@@ -705,10 +705,10 @@ If you really want to do in memory filtering on the data returned from the query
         /// <param name="filterTypeName">The name of the filter type</param>
         /// <param name="filterConstructorParameters">The parameters to the constructor.</param>
         /// <returns></returns>
-        public void FilterBy(string filterTypeName, params object[] filterConstructorParameters)
+        public void FilterBy(string filterTypeName, object[] filterConstructorParameters)
         {
             filterType = filterTypeName;
-            filterConstructorParams = filterConstructorParameters;
+            filterConstructorParamsInJson = Newtonsoft.Json.JsonConvert.SerializeObject(filterConstructorParameters);
         }
 
 	    /// <summary>
@@ -1334,7 +1334,7 @@ If you really want to do in memory filtering on the data returned from the query
                 GroupBy = groupByFields,
                 AggregationOperation = aggregationOp,
                 FilterType = filterType,
-                FilterConstructorParameters = filterConstructorParams,
+                FilterConstructorParametersInJson = filterConstructorParamsInJson,
                 Query = query,
                 PageSize = pageSize ?? 128,
                 Start = start,

@@ -100,7 +100,7 @@ namespace Raven.Abstractions.Data
 		/// <summary>
 		/// Gets or sets the lucene filter parameters
 		/// </summary>
-		public object[] FilterConstructorParameters;
+		public string FilterConstructorParametersInJson;
         
 		/// <summary>
 		/// Gets the index query URL.
@@ -136,12 +136,8 @@ namespace Raven.Abstractions.Data
 
 			if (FilterType != null)
 			{
-				var parametersInJson = Newtonsoft.Json.JsonConvert.SerializeObject(FilterConstructorParameters);
-
-			    var filterParameters = Uri.EscapeUriString(parametersInJson);
-
 				path.Append("&filterType=").Append(Uri.EscapeUriString(FilterType));
-				path.Append("&filterParameters=").Append(filterParameters);
+				path.Append("&filterParameters=").Append(Uri.EscapeUriString(FilterConstructorParametersInJson));
 			}
 
 			var vars = GetCustomQueryStringVariables();

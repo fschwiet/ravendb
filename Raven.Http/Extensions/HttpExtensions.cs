@@ -333,16 +333,14 @@ namespace Raven.Http.Extensions
 			return Uri.UnescapeDataString(filterTypeName);
 		}
 
-		public static object[] GetFilterConstructorParameters(this IHttpContext context)
+		public static string GetFilterConstructorParameters(this IHttpContext context)
 		{
 			var filterParameters = context.Request.QueryString["filterParameters"];
 
 			if (filterParameters == null)
 				return null;
 
-		    var unescapeDataString = Uri.UnescapeDataString(filterParameters);
-
-		    return Newtonsoft.Json.JsonConvert.DeserializeObject<object[]>(unescapeDataString);
+			return Uri.UnescapeDataString(filterParameters);
 		}
 
 		public static Guid? GetEtag(this IHttpContext context)

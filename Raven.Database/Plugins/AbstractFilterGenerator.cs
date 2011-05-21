@@ -8,10 +8,10 @@ using Raven.Json.Linq;
 
 namespace Raven.Database.Plugins
 {
-    [InheritedExport]
-    public abstract class AbstractFilter
-    {
-        public abstract string GetName();
-        public abstract Filter Create(RavenJArray filterArguments);
-    }
+	[InheritedExport]
+	public abstract class AbstractFilterGenerator
+	{
+		public abstract string GetName();
+		public abstract Filter Create(RavenJArray filterArguments);
+	}
 }
