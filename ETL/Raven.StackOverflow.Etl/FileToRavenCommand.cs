@@ -28,13 +28,13 @@ namespace Raven.StackOverflow.Etl
         {
             ExecuteAndWaitAll(
                 LoadDataFor("Users*.json")
-                //,LoadDataFor("Posts*.json")
+                ,LoadDataFor("Posts*.json")
                 );
-            ExecuteAndWaitAll(
-                LoadDataFor("Badges*.json")
+            //ExecuteAndWaitAll(
+                //LoadDataFor("Badges*.json")
                 //,LoadDataFor("Votes*.json"),
                 //LoadDataFor("Comments*.json")
-                );
+                //);
         }
 
         public IEnumerable<Action> LoadDataFor(string searchPattern)
