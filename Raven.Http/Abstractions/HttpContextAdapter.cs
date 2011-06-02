@@ -17,17 +17,22 @@ namespace Raven.Http.Abstractions
 		private readonly HttpContext context;
 		private readonly HttpRequestAdapter request;
 		private readonly HttpResponseAdapter response;
-        private readonly IRaveHttpnConfiguration configuration;
+        private readonly IRavenHttpConfiguration configuration;
 
-        public HttpContextAdapter(HttpContext context, IRaveHttpnConfiguration configuration)
+        public HttpContextAdapter(HttpContext context, IRavenHttpConfiguration configuration)
 		{
 			this.context = context;
 			this.configuration = configuration;
 			request = new HttpRequestAdapter(context.Request);
 			response = new HttpResponseAdapter(context.Response);
+
+			if(string.IsNullOrEmpty(context.Request.Headers["Cache-Control"]) == false)
+			{
+				context.Response.CacheControl = request.Headers["Cache-Control"];
+			}
 		}
 
-        public IRaveHttpnConfiguration Configuration
+        public IRavenHttpConfiguration Configuration
 		{
 			get { return configuration; }
 		}

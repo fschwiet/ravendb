@@ -11,6 +11,7 @@ using System.Collections.Specialized;
 #endif
 using System.Linq;
 using System.Net;
+using Raven.Abstractions.Extensions;
 #if !NET_3_5
 using Raven.Client.Connection.Async;
 #endif
@@ -124,6 +125,49 @@ namespace Raven.Client.Shard
 
 #endif
 
+		/// <summary>
+		/// Setup the context for aggressive caching.
+		/// </summary>
+		/// <param name="cacheDuration">Specify the aggressive cache duration</param>
+		/// <remarks>
+		/// aggressive caching means that we will not check the server to see whatever the response
+		/// we provide is current or not, but will serve the information directly from the local cache
+		/// without touching the server.
+		/// </remarks>
+		public IDisposable AggressivelyCacheFor(TimeSpan cacheDuration)
+		{
+			var disposables = shards.Select(shard => shard.AggressivelyCacheFor(cacheDuration)).ToList();
+
+			return new DisposableAction(() =>
+			{
+				foreach (var disposable in disposables)
+				{
+					disposable.Dispose();
+				}
+			});
+		}
+
+		/// <summary>
+		/// Setup the context for no aggressive caching
+		/// </summary>
+		/// <remarks>
+		/// This is mainly useful for internal use inside RavenDB, when we are executing
+		/// queries that has been marked with WaitForNonStaleResults, we temporarily disable
+		/// aggressive caching.
+		/// </remarks>
+		public IDisposable DisableAggressiveCaching()
+		{
+			var disposables = shards.Select(shard => shard.DisableAggressiveCaching()).ToList();
+
+			return new DisposableAction(() =>
+			{
+				foreach (var disposable in disposables)
+				{
+					disposable.Dispose();
+				}
+			});
+		}
+
 #if !SILVERLIGHT
 		
 		/// <summary>
@@ -132,7 +176,7 @@ namespace Raven.Client.Shard
 		/// <returns></returns>
 		public IDocumentSession OpenSession()
 		{
-			return new ShardedDocumentSession(shardStrategy, shards.Select(x => x.OpenSession()).ToArray());
+			return new ShardedDocumentSession(shardStrategy, shards.Select(x => x.OpenSession()).ToArray(), this);
 		}
 
 		/// <summary>
@@ -140,7 +184,7 @@ namespace Raven.Client.Shard
 		/// </summary>
 		public IDocumentSession OpenSession(string database)
 		{
-			return new ShardedDocumentSession(shardStrategy, shards.Select(x => x.OpenSession(database)).ToArray());
+			return new ShardedDocumentSession(shardStrategy, shards.Select(x => x.OpenSession(database)).ToArray(), this);
 		}
 
 		/// <summary>
@@ -148,7 +192,7 @@ namespace Raven.Client.Shard
 		/// </summary>
 		public IDocumentSession OpenSession(string database, ICredentials credentialsForSession)
 		{
-			return new ShardedDocumentSession(shardStrategy, shards.Select(x => x.OpenSession(database, credentialsForSession)).ToArray());
+			return new ShardedDocumentSession(shardStrategy, shards.Select(x => x.OpenSession(database, credentialsForSession)).ToArray(), this);
 		}
 
 		/// <summary>
@@ -157,7 +201,7 @@ namespace Raven.Client.Shard
 		/// <param name="credentialsForSession">The credentials for session.</param>
 		public IDocumentSession OpenSession(ICredentials credentialsForSession)
 		{
-			return new ShardedDocumentSession(shardStrategy, shards.Select(x => x.OpenSession(credentialsForSession)).ToArray());
+			return new ShardedDocumentSession(shardStrategy, shards.Select(x => x.OpenSession(credentialsForSession)).ToArray(), this);
 		}
 
 		/// <summary>
@@ -177,6 +221,14 @@ namespace Raven.Client.Shard
 		public DocumentConvention Conventions
 		{
 			get { throw new NotSupportedException("Sharded document store doesn't have a database conventions. you need to explicitly use the shard instances to get access to the database commands"); }
+		}
+
+		/// <summary>
+		/// Gets or sets the URL.
+		/// </summary>
+		public string Url
+		{
+			get { throw new NotImplementedException("There isn't a single url wen"); }
 		}
 
 		/// <summary>

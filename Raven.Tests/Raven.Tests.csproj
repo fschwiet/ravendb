@@ -155,6 +155,7 @@
     <Compile Include="Bugs\Account.cs" />
     <Compile Include="Bugs\AccurateCount.cs" />
     <Compile Include="Bugs\AfterDeletingTheIndexStopsBeingStale.cs" />
+    <Compile Include="Bugs\AggressiveCaching.cs" />
     <Compile Include="Bugs\AnalyzerPerField.cs" />
     <Compile Include="Bugs\AnonymousClasses.cs" />
     <Compile Include="Bugs\CanGetScores.cs" />
@@ -165,6 +166,7 @@
     <Compile Include="Bugs\EntitiesWithAttributes.cs" />
     <Compile Include="Bugs\Indexing\CanIndexNestedObjects.cs" />
     <Compile Include="Bugs\Indexing\CanIndexWithCharLiteral.cs" />
+    <Compile Include="Bugs\IndexSelectionForMapReduce.cs" />
     <Compile Include="Bugs\IntegerIds.cs" />
     <Compile Include="Bugs\IteratingTwice.cs" />
     <Compile Include="Bugs\Iulian\CanReadEntityWithUrlId.cs" />
@@ -350,6 +352,7 @@
     <Compile Include="Bugs\ReuseQuery.cs" />
     <Compile Include="Bugs\SelectManyIssue.cs" />
     <Compile Include="Bugs\SelectManyOnNull.cs" />
+    <Compile Include="Bugs\SelectManyTests .cs" />
     <Compile Include="Bugs\SerializingDates.cs" />
     <Compile Include="Bugs\SerializingEntities.cs" />
     <Compile Include="Bugs\SinglePropertyDocument.cs" />

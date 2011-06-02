@@ -6,6 +6,7 @@
 using System;
 using System.Net;
 using Raven.Abstractions.Data;
+using Raven.Abstractions.Extensions;
 using Raven.Client.Connection;
 #if !NET_3_5
 using Raven.Client.Connection.Async;
@@ -45,6 +46,7 @@ namespace Raven.Client.Document
 		/// </summary>
 		/// <value>The shared operations headers.</value>
 #if !SILVERLIGHT
+	
 		public System.Collections.Specialized.NameValueCollection SharedOperationsHeaders { get; private set; }
 #else
 		public System.Collections.Generic.IDictionary<string,string> SharedOperationsHeaders { get; private set; }
@@ -217,7 +219,6 @@ namespace Raven.Client.Document
 		/// <summary>
 		/// Gets or sets the URL.
 		/// </summary>
-		/// <value>The URL.</value>
 		public string Url { get; set; }
 
 		/// <summary>
@@ -443,6 +444,51 @@ namespace Raven.Client.Document
 		{
 			conversionListeners = conversionListeners.Concat(new[] {conversionListener,}).ToArray();
 			return this;
+		}
+
+
+		/// <summary>
+		/// Setup the context for no aggressive caching
+		/// </summary>
+		/// <remarks>
+		/// This is mainly useful for internal use inside RavenDB, when we are executing
+		/// queries that has been marked with WaitForNonStaleResults, we temporarily disable
+		/// aggressive caching.
+		/// </remarks>
+		public IDisposable DisableAggressiveCaching()
+		{
+#if !SILVERLIGHT
+			var old = jsonRequestFactory.AggressiveCacheDuration;
+			jsonRequestFactory.AggressiveCacheDuration = null;
+			return new DisposableAction(() => jsonRequestFactory.AggressiveCacheDuration = old);
+#else
+			// TODO: with silverlight, we don't currently support aggressive caching
+			return new DisposableAction(() => { });
+#endif
+		}
+
+		/// <summary>
+		/// Setup the context for aggressive caching.
+		/// </summary>
+		/// <param name="cacheDuration">Specify the aggressive cache duration</param>
+		/// <remarks>
+		/// Aggressive caching means that we will not check the server to see whatever the response
+		/// we provide is current or not, but will serve the information directly from the local cache
+		/// without touching the server.
+		/// </remarks>
+		public IDisposable AggressivelyCacheFor(TimeSpan cacheDuration)
+		{
+#if !SILVERLIGHT
+			if(cacheDuration.TotalSeconds < 1)
+				throw new ArgumentException("cacheDuration must be longer than a single second");
+
+			jsonRequestFactory.AggressiveCacheDuration = cacheDuration;
+
+			return new DisposableAction(() => jsonRequestFactory.AggressiveCacheDuration = null);
+#else
+			// TODO: with silverlight, we don't currently support aggressive caching
+			return new DisposableAction(() => { });
+#endif
 		}
 
 #if !NET_3_5

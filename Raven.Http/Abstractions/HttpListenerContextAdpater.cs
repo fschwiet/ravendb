@@ -15,17 +15,22 @@ namespace Raven.Http.Abstractions
 	public class HttpListenerContextAdpater : IHttpContext
 	{
 		private readonly HttpListenerContext ctx;
-        private readonly IRaveHttpnConfiguration configuration;
+        private readonly IRavenHttpConfiguration configuration;
 
-        public HttpListenerContextAdpater(HttpListenerContext ctx, IRaveHttpnConfiguration configuration)
+        public HttpListenerContextAdpater(HttpListenerContext ctx, IRavenHttpConfiguration configuration)
 		{
 			this.ctx = ctx;
 			this.configuration = configuration;
 			Request = new HttpListenerRequestAdapter(ctx.Request);
 			ResponseInternal = new HttpListenerResponseAdapter(ctx.Response);
+
+			if (string.IsNullOrEmpty(ctx.Request.Headers["Cache-Control"]) == false)
+			{
+				ctx.Response.AddHeader("Cache-Control", ctx.Request.Headers["Cache-Control"]);
+			}
 		}
 
-        public IRaveHttpnConfiguration Configuration
+        public IRavenHttpConfiguration Configuration
 		{
 			get { return configuration; }
 		}

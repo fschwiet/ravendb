@@ -9,6 +9,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 using Newtonsoft.Json.Linq;
 using Raven.Json.Linq;
 
@@ -25,7 +26,7 @@ namespace Raven.Client.Connection
 		private byte[] bytesForNextWrite;
 
 
-		internal readonly WebRequest WebRequest;
+		internal readonly HttpWebRequest webRequest;
 		// temporary create a strong reference to the cached data for this request
 		// avoid the potential for clearing the cache from a cached item
 		internal CachedRequest CachedRequestDetails;
@@ -43,12 +44,12 @@ namespace Raven.Client.Connection
 			this.Url = url;
 			this.factory = factory;
 			this.Method = method;
-			WebRequest = WebRequest.Create(url);
-			WebRequest.Credentials = credentials;
+			webRequest = (HttpWebRequest)WebRequest.Create(url);
+			webRequest.Credentials = credentials;
 			WriteMetadata(metadata);
-			WebRequest.Method = method;
-			WebRequest.Headers["Accept-Encoding"] = "deflate,gzip";
-			WebRequest.ContentType = "application/json; charset=utf-8";
+			webRequest.Method = method;
+			webRequest.Headers["Accept-Encoding"] = "deflate,gzip";
+			webRequest.ContentType = "application/json; charset=utf-8";
 		}
 
 		/// <summary>
@@ -59,7 +60,12 @@ namespace Raven.Client.Connection
 		/// <returns></returns>
 		public IAsyncResult BeginReadResponseString(AsyncCallback callback, object state)
 		{
-			return WebRequest.BeginGetResponse(callback, state);
+			if (SkipServerCheck)
+			{
+				return new ImmedateCompletionResult();
+			}
+
+			return webRequest.BeginGetResponse(callback, state);
 		}
 
 		/// <summary>
@@ -69,7 +75,15 @@ namespace Raven.Client.Connection
 		/// <returns></returns>
 		public string EndReadResponseString(IAsyncResult result)
 		{
-			return ReadStringInternal(() => WebRequest.EndGetResponse(result));
+			if (SkipServerCheck)
+			{
+				var disposable = result as IDisposable;
+				if(disposable!=null)
+					disposable.Dispose();
+				return factory.GetCachedResponse(this);
+			}
+
+			return ReadStringInternal(() => webRequest.EndGetResponse(result));
 		}
 
 		/// <summary>
@@ -78,7 +92,10 @@ namespace Raven.Client.Connection
 		/// <returns></returns>
 		public string ReadResponseString()
 		{
-			return ReadStringInternal(WebRequest.GetResponse);
+			if (SkipServerCheck)
+				return factory.GetCachedResponse(this);
+
+			return ReadStringInternal(webRequest.GetResponse);
 		}
 
 		private string ReadStringInternal(Func<WebResponse> getResponse)
@@ -99,6 +116,7 @@ namespace Raven.Client.Connection
 				if (httpWebResponse.StatusCode == HttpStatusCode.NotModified
 					&& CachedRequestDetails != null)
 				{
+					factory.UpdateCacheTime(this);
 					return factory.GetCachedResponse(this);
 				}
 
@@ -126,11 +144,16 @@ namespace Raven.Client.Connection
 		/// <value>The response status code.</value>
 		public HttpStatusCode ResponseStatusCode { get; set; }
 
+		///<summary>
+		/// Whatever we can skip the server check and directly return the cached result
+		///</summary>
+		public bool SkipServerCheck { get; set; }
+
 		private void WriteMetadata(RavenJObject metadata)
 		{
 			if (metadata == null || metadata.Count == 0)
 			{
-				WebRequest.ContentLength = 0;
+				webRequest.ContentLength = 0;
 				return;
 			}
 
@@ -147,16 +170,43 @@ namespace Raven.Client.Connection
 				if (headerName == "ETag")
 					headerName = "If-Match";
 				var value = prop.Value.Value<object>().ToString();
-				switch (headerName)
+
+				// Restricted headers require their own special treatment, otherwise an exception will
+				// be thrown.
+				// See http://msdn.microsoft.com/en-us/library/78h415ay.aspx
+				if (WebHeaderCollection.IsRestricted(headerName))
 				{
-					case "Content-Length":
-						break;
-					case "Content-Type":
-						WebRequest.ContentType = value;
-						break;
-					default:
-						WebRequest.Headers[headerName] = value;
-						break;
+					switch (headerName)
+					{
+						/*case "Date":
+						case "Referer":
+						case "Content-Length":
+						case "Expect":
+						case "Range":
+						case "Transfer-Encoding":
+						case "User-Agent":
+						case "Proxy-Connection":
+						case "Host": // Host property is not supported by 3.5
+							break;*/
+						case "Content-Type":
+							webRequest.ContentType = value;
+							break;
+						case "If-Modified-Since":
+							DateTime tmp;
+							DateTime.TryParse(value, out tmp);
+							webRequest.IfModifiedSince = tmp;
+							break;
+						case "Accept":
+							webRequest.Accept = value;
+							break;
+						case "Connection":
+							webRequest.Connection = value;
+							break;
+					}
+				} 
+				else 
+				{
+					webRequest.Headers[headerName] = value;
 				}
 			}
 		}
@@ -178,9 +228,9 @@ namespace Raven.Client.Connection
 		/// <param name="byteArray">The byte array.</param>
 		public void Write(byte[] byteArray)
 		{
-			WebRequest.ContentLength = byteArray.Length;
+			webRequest.ContentLength = byteArray.Length;
 
-			using (var dataStream = WebRequest.GetRequestStream())
+			using (var dataStream = webRequest.GetRequestStream())
 			{
 				dataStream.Write(byteArray, 0, byteArray.Length);
 				dataStream.Close();
@@ -197,8 +247,8 @@ namespace Raven.Client.Connection
 		public IAsyncResult BeginWrite(byte[] byteArray, AsyncCallback callback, object state)
 		{
 			bytesForNextWrite = byteArray;
-			WebRequest.ContentLength = byteArray.Length;
-			return WebRequest.BeginGetRequestStream(callback, state);
+			webRequest.ContentLength = byteArray.Length;
+			return webRequest.BeginGetRequestStream(callback, state);
 		}
 
 		/// <summary>
@@ -207,7 +257,7 @@ namespace Raven.Client.Connection
 		/// <param name="result">The result.</param>
 		public void EndWrite(IAsyncResult result)
 		{
-			using (var dataStream = WebRequest.EndGetRequestStream(result))
+			using (var dataStream = webRequest.EndGetRequestStream(result))
 			{
 				dataStream.Write(bytesForNextWrite, 0, bytesForNextWrite.Length);
 				dataStream.Close();
@@ -223,7 +273,7 @@ namespace Raven.Client.Connection
 		{
 			foreach (string header in operationsHeaders)
 			{
-				WebRequest.Headers[header] = operationsHeaders[header];
+				webRequest.Headers[header] = operationsHeaders[header];
 			}
 		}
 
@@ -235,8 +285,52 @@ namespace Raven.Client.Connection
 		{
 			foreach (var kvp in operationsHeaders)
 			{
-				WebRequest.Headers[kvp.Key] = operationsHeaders[kvp.Value];
+				webRequest.Headers[kvp.Key] = operationsHeaders[kvp.Value];
 			}
 		}
+
+		private class ImmedateCompletionResult : IAsyncResult, IDisposable
+		{
+			private ManualResetEvent manualResetEvent;
+
+			public bool IsCompleted
+			{
+				get { return true; }
+			}
+
+			public WaitHandle AsyncWaitHandle
+			{
+				get
+				{
+					if (manualResetEvent == null)
+					{
+						lock (this)
+						{
+							if (manualResetEvent == null)
+								manualResetEvent = new ManualResetEvent(true);
+						}
+					}
+					return manualResetEvent;
+				}
+			}
+
+			public object AsyncState
+			{
+				get { return null; }
+			}
+
+			public bool CompletedSynchronously
+			{
+				get { return true; }
+			}
+
+			public void Dispose()
+			{
+				if (manualResetEvent != null)
+					manualResetEvent.Close();
+			}
+		}
+
+		
 	}
 }
