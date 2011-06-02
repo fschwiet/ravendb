@@ -323,6 +323,26 @@ namespace Raven.Http.Extensions
 			return null;
 		}
 
+		public static string GetFilterType(this IHttpContext context)
+		{
+			var filterTypeName = context.Request.QueryString["filterType"];
+
+			if (filterTypeName == null)
+				return null;
+
+			return Uri.UnescapeDataString(filterTypeName);
+		}
+
+		public static string GetFilterConstructorParameters(this IHttpContext context)
+		{
+			var filterParameters = context.Request.QueryString["filterParameters"];
+
+			if (filterParameters == null)
+				return null;
+
+			return Uri.UnescapeDataString(filterParameters);
+		}
+
 		public static Guid? GetEtag(this IHttpContext context)
 		{
 			var etagAsString = context.Request.Headers["If-Match"];

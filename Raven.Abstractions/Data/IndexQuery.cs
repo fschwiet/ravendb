@@ -5,8 +5,11 @@
 //-----------------------------------------------------------------------
 using System;
 using System.Globalization;
+using System.IO;
 using System.Text;
+using Newtonsoft.Json;
 using Raven.Abstractions.Extensions;
+using Raven.Json.Linq;
 
 namespace Raven.Abstractions.Data
 {
@@ -90,6 +93,16 @@ namespace Raven.Abstractions.Data
 		public Reference<int> SkippedResults { get; set; }
 
 		/// <summary>
+		/// Gets or sets the name of a Lucene filter
+		/// </summary>
+		public string FilterType;
+
+		/// <summary>
+		/// Gets or sets the lucene filter parameters
+		/// </summary>
+		public string FilterConstructorParametersInJson;
+        
+		/// <summary>
 		/// Gets the index query URL.
 		/// </summary>
 		/// <param name="operationUrl">The operation URL.</param>
@@ -120,6 +133,13 @@ namespace Raven.Abstractions.Data
 					Uri.EscapeUriString(Uri.EscapeDataString(Cutoff.Value.ToString("o", CultureInfo.InvariantCulture)));
 				path.Append("&cutOff=").Append(cutOffAsString);
 			}
+
+			if (FilterType != null)
+			{
+				path.Append("&filterType=").Append(Uri.EscapeUriString(FilterType));
+				path.Append("&filterParameters=").Append(Uri.EscapeUriString(FilterConstructorParametersInJson));
+			}
+
 			var vars = GetCustomQueryStringVariables();
 
 			if (!string.IsNullOrEmpty(vars))

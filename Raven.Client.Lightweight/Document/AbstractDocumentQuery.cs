@@ -187,7 +187,17 @@ namespace Raven.Client.Document
             get { return theQueryText; }
         }
 
-		private Action<QueryResult> afterQueryExecuted;
+        private Action<QueryResult> afterQueryExecuted;
+
+        /// <summary>
+        /// Name of lucene filter
+        /// </summary>
+        protected string filterType;
+
+        /// <summary>
+        /// Parameter values used to construct lucene filter
+        /// </summary>
+        protected string filterConstructorParamsInJson;
 
 #if !SILVERLIGHT && !NET_3_5
         /// <summary>
@@ -689,7 +699,19 @@ If you really want to do in memory filtering on the data returned from the query
             aggregationOp = aggregationOperation;
         }
 
-        /// <summary>
+        ///<summary>
+        ///  Filters the result by a Lucene filter.
+        /// </summary>
+        /// <param name="filterTypeName">The name of the filter type</param>
+        /// <param name="filterConstructorParameters">The parameters to the constructor.</param>
+        /// <returns></returns>
+        public void FilterBy(string filterTypeName, object[] filterConstructorParameters)
+        {
+            filterType = filterTypeName;
+            filterConstructorParamsInJson = Newtonsoft.Json.JsonConvert.SerializeObject(filterConstructorParameters);
+        }
+
+	    /// <summary>
         ///   Simplified method for closing a clause within the query
         /// </summary>
         /// <returns></returns>
@@ -1311,6 +1333,8 @@ If you really want to do in memory filtering on the data returned from the query
             {
                 GroupBy = groupByFields,
                 AggregationOperation = aggregationOp,
+                FilterType = filterType,
+                FilterConstructorParametersInJson = filterConstructorParamsInJson,
                 Query = query,
                 PageSize = pageSize ?? 128,
                 Start = start,

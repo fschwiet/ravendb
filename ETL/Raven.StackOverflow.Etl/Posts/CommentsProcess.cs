@@ -26,7 +26,7 @@ namespace Raven.StackOverflow.Etl.Posts
 
 		protected override void Initialize()
 		{
-			PipelineExecuter = new SimplePipelineExecutor();
+			PipelineExecuter = new SingleThreadedPipelineExecuter();
 			Register(new XmlRowOperationFile(Path.Combine(_inputDirectory, "comments.xml")));
 			Register(new AddCommentsToPost(_outputDirectory));
 		}

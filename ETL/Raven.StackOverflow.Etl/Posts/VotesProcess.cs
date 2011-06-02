@@ -25,7 +25,7 @@ namespace Raven.StackOverflow.Etl.Posts
 
 		protected override void Initialize()
 		{
-			PipelineExecuter = new SimplePipelineExecutor();
+			PipelineExecuter = new SingleThreadedPipelineExecuter();
 			Register(new XmlRowOperationFile(Path.Combine(_inputPath, "votes.xml")));
 			Register(new AddVotesToPost(_outputPath));
 		}

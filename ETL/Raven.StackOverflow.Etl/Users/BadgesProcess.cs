@@ -25,7 +25,7 @@ namespace Raven.StackOverflow.Etl.Users
 
 		protected override void Initialize()
 		{
-			PipelineExecuter = new SimplePipelineExecutor(); 
+			PipelineExecuter = new SingleThreadedPipelineExecuter(); 
 			Register(new XmlRowOperationFile(Path.Combine(_inputDirectory, "badges.xml")));
 			Register(new AddBadgesToUser(_outputDirectory));
 		}

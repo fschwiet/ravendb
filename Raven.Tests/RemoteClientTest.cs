@@ -4,6 +4,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using System;
+using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -25,19 +27,22 @@ namespace Raven.Tests
 		protected const string DbDirectory = @".\TestDb\";
 		protected const string DbName = DbDirectory + @"DocDb.esb";
 
-        protected RavenDbServer GetNewServer()
-        {
-        	var ravenConfiguration = new RavenConfiguration
-        	{
-        		Port = 8080,
-        		RunInMemory = true,
-        		DataDirectory = "Data",
-        		AnonymousUserAccessMode = AnonymousUserAccessMode.All
-        	};
+		protected RavenDbServer GetNewServer(ComposablePartCatalog catalog = null)
+		{
+			var ravenConfiguration = new RavenConfiguration
+			{
+				Port = 8080,
+				RunInMemory = true,
+				DataDirectory = "Data",
+				AnonymousUserAccessMode = AnonymousUserAccessMode.All
+			};
 
-        	ConfigureServer(ravenConfiguration);
+			if (catalog != null)
+				ravenConfiguration.Catalog.Catalogs.Add(catalog);
 
-        	var ravenDbServer = new RavenDbServer(ravenConfiguration);
+			ConfigureServer(ravenConfiguration);
+
+			var ravenDbServer = new RavenDbServer(ravenConfiguration);
 
 			using (var documentStore = new DocumentStore
 			{
@@ -47,8 +52,8 @@ namespace Raven.Tests
 				new RavenDocumentsByEntityName().Execute(documentStore);
 			}
 
-        	return ravenDbServer;
-        }
+			return ravenDbServer;
+		}
 
 		protected virtual void ConfigureServer(RavenConfiguration ravenConfiguration)
 		{
@@ -112,11 +117,11 @@ namespace Raven.Tests
 		}
 
 		protected string GetPath(string subFolderName)
-        {
-            string retPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(DocumentStoreServerTests)).CodeBase);
-            return Path.Combine(retPath, subFolderName).Substring(6); //remove leading file://
-        }
-        
+		{
+			string retPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(DocumentStoreServerTests)).CodeBase);
+			return Path.Combine(retPath, subFolderName).Substring(6); //remove leading file://
+		}
+		
 		public RemoteClientTest()
 		{
 			try
@@ -127,7 +132,7 @@ namespace Raven.Tests
 			{
 			}
 
-            ClearDatabaseDirectory();
+			ClearDatabaseDirectory();
 
 			Directory.CreateDirectory(DbDirectory);
 		}
