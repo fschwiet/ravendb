@@ -58,11 +58,16 @@ namespace Raven.Client.Document.Async
 	    /// </summary>
 		public IAsyncDocumentQuery<T> AsyncLuceneQuery<T>()
 	    {
+	    	var indexName = "dynamic";
+			if (typeof(T) != typeof(object))
+			{
+				indexName += "/" + Conventions.GetTypeTagName(typeof(T));
+			}
             return new AsyncDocumentQuery<T>(this, 
 #if !SILVERLIGHT
 					null,
 #endif
-					AsyncDatabaseCommands, "dynamic", new string[0], queryListeners);
+					AsyncDatabaseCommands, indexName, new string[0], queryListeners);
 	    }
 
 	    /// <summary>
@@ -139,7 +144,7 @@ namespace Raven.Client.Document.Async
 		/// </summary>
 		/// <param name="ids">The ids.</param>
 		/// <returns></returns>
-		public Task<T[]> MultiLoadAsync<T>(string[] ids)
+		public Task<T[]> LoadAsync<T>(string[] ids)
 		{
 			IncrementRequestCount();
 			return AsyncDatabaseCommands.MultiGetAsync(ids)
