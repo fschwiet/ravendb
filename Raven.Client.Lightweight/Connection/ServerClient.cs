@@ -21,6 +21,7 @@ using Raven.Abstractions.Data;
 using Raven.Abstractions.Exceptions;
 using Raven.Abstractions.Extensions;
 using Raven.Abstractions.Indexing;
+using Raven.Client.Connection.Profiling;
 using Raven.Client.Document;
 using Raven.Client.Exceptions;
 using Raven.Client.Indexes;
@@ -40,6 +41,9 @@ namespace Raven.Client.Connection
 		private readonly ICredentials credentials;
 		private readonly ReplicationInformer replicationInformer;
 		private readonly HttpJsonRequestFactory jsonRequestFactory;
+		private readonly Guid? currentSessionId;
+		private readonly ProfilingInformation profilingInformation;
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ServerClient"/> class.
 		/// </summary>
@@ -47,10 +51,14 @@ namespace Raven.Client.Connection
 		/// <param name="convention">The convention.</param>
 		/// <param name="credentials">The credentials.</param>
 		/// <param name="replicationInformer">The replication informer.</param>
-		public ServerClient(string url, DocumentConvention convention, ICredentials credentials, ReplicationInformer replicationInformer, HttpJsonRequestFactory jsonRequestFactory)
+		/// <param name="jsonRequestFactory"></param>
+		/// <param name="currentSessionId"></param>
+		public ServerClient(string url, DocumentConvention convention, ICredentials credentials, ReplicationInformer replicationInformer, HttpJsonRequestFactory jsonRequestFactory, Guid? currentSessionId)
 		{
+			profilingInformation = new ProfilingInformation(currentSessionId);
 			this.credentials = credentials;
 			this.jsonRequestFactory = jsonRequestFactory;
+			this.currentSessionId = currentSessionId;
 			this.replicationInformer = replicationInformer;
 			this.url = url;
 			this.convention = convention;
@@ -907,7 +915,7 @@ Failed to get in touch with any of the " + 1 + threadSafeCopy.Count + " Raven in
 		/// <returns></returns>
 		public IDatabaseCommands With(ICredentials credentialsForSession)
 		{
-			return new ServerClient(url, convention, credentialsForSession, replicationInformer, jsonRequestFactory);
+			return new ServerClient(url, convention, credentialsForSession, replicationInformer, jsonRequestFactory, currentSessionId);
 		}
 
 		/// <summary>
@@ -923,7 +931,7 @@ Failed to get in touch with any of the " + 1 + threadSafeCopy.Count + " Raven in
 			if (databaseUrl.EndsWith("/") == false)
 				databaseUrl += "/";
 			databaseUrl = databaseUrl + "databases/" + database + "/";
-			return new ServerClient(databaseUrl, convention, credentials, replicationInformer, jsonRequestFactory);
+			return new ServerClient(databaseUrl, convention, credentials, replicationInformer, jsonRequestFactory, currentSessionId);
 		}
 
 		/// <summary>
@@ -936,7 +944,7 @@ Failed to get in touch with any of the " + 1 + threadSafeCopy.Count + " Raven in
 			if (indexOfDatabases == -1)
 				return this;
 
-			return new ServerClient(url.Substring(0, indexOfDatabases), convention, credentials, replicationInformer, jsonRequestFactory);
+			return new ServerClient(url.Substring(0, indexOfDatabases), convention, credentials, replicationInformer, jsonRequestFactory, currentSessionId);
 		}
 
 		/// <summary>
@@ -991,6 +999,29 @@ Failed to get in touch with any of the " + 1 + threadSafeCopy.Count + " Raven in
 		}
 
 		/// <summary>
+		/// Perform a set based update using the specified index, not allowing the operation
+		/// if the index is stale
+		/// </summary>
+		/// <param name="indexName">Name of the index.</param>
+		/// <param name="queryToUpdate">The query to update.</param>
+		/// <param name="patchRequests">The patch requests.</param>
+		public void UpdateByIndex(string indexName, IndexQuery queryToUpdate, PatchRequest[] patchRequests)
+		{
+			UpdateByIndex(indexName, queryToUpdate, patchRequests, false);
+		}
+
+		/// <summary>
+		/// Perform a set based deletes using the specified index, not allowing the operation
+		/// if the index is stale
+		/// </summary>
+		/// <param name="indexName">Name of the index.</param>
+		/// <param name="queryToDelete">The query to delete.</param>
+		public void DeleteByIndex(string indexName, IndexQuery queryToDelete)
+		{
+			DeleteByIndex(indexName, queryToDelete, false);
+		}
+
+		/// <summary>
 		/// Perform a set based update using the specified index.
 		/// </summary>
 		/// <param name="indexName">Name of the index.</param>
@@ -999,7 +1030,6 @@ Failed to get in touch with any of the " + 1 + threadSafeCopy.Count + " Raven in
 		/// <param name="allowStale">if set to <c>true</c> [allow stale].</param>
 		public void UpdateByIndex(string indexName, IndexQuery queryToUpdate, PatchRequest[] patchRequests, bool allowStale)
 		{
-
 			ExecuteWithReplication<object>("PATCH", operationUrl =>
 			{
 				string path = queryToUpdate.GetIndexQueryUrl(operationUrl, indexName, "bulk_docs") + "&allowStale=" + allowStale;
@@ -1096,7 +1126,44 @@ Failed to get in touch with any of the " + 1 + threadSafeCopy.Count + " Raven in
 			return json.Values<string>();
 		}
 
+		/// <summary>
+		/// Sends a patch request for a specific document, ignoring the document's Etag
+		/// </summary>
+		/// <param name="key">Id of the document to patch</param>
+		/// <param name="patches">Array of patch requests</param>
+		public void Patch(string key, PatchRequest[] patches)
+		{
+			Patch(key, patches, null);
+		}
+
+		/// <summary>
+		/// Sends a patch request for a specific document
+		/// </summary>
+		/// <param name="key">Id of the document to patch</param>
+		/// <param name="patches">Array of patch requests</param>
+		/// <param name="etag">Require specific Etag [null to ignore]</param>
+		public void Patch(string key, PatchRequest[] patches, Guid? etag)
+		{
+			Batch(new[]
+			      	{
+			      		new PatchCommandData
+			      			{
+			      				Key = key,
+			      				Patches = patches,
+			      				Etag = etag
+			      			}
+			      	});
+		}
+
 		#endregion
+
+		/// <summary>
+		/// The profiling information
+		/// </summary>
+		public ProfilingInformation ProfilingInformation
+		{
+			get { return profilingInformation; }
+		}
 	}
 }
 #endif

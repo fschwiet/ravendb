@@ -80,6 +80,24 @@ namespace Raven.Abstractions.Data
 		/// <value>The cutoff.</value>
 		public DateTime? Cutoff { get; set; }
 
+		/// <summary>
+		/// Gets or sets the cutoff etag
+		/// </summary>
+		/// <remarks>
+		/// Cutoff etag is used to check if the index has already process a document with the given
+		/// etag. Unlike Cutoff, which uses dates and is susceptible to clock syncronization issues between
+		/// machines, cutoff etag doesn't rely on both the server and client having a syncronized clock and 
+		/// can work without it.
+		/// However, when used to query map/reduce indexes, it does NOT guarantee that the document that this
+		/// etag belong to is actually considered for the results. 
+		/// What it does it guarantee that the document has been mapped, but not that the mapped values has been reduce. 
+		/// Since map/reduce queries, by their nature,tend to be far less susceptible to issues with staleness, this is 
+		/// considered to be an acceptable tradeoff.
+		/// If you need absolute no staleness with a map/reduce index, you will need to ensure syncronized clocks and 
+		/// use the Cutoff date option, instead.
+		/// </remarks>
+		public Guid? CutoffEtag { get; set; }
+
         /// <summary>
         /// If set to true, RavenDB won't execute the transform results function
         /// returning just the raw results instead
@@ -138,6 +156,11 @@ namespace Raven.Abstractions.Data
 			{
 				path.Append("&filterType=").Append(Uri.EscapeUriString(FilterType));
 				path.Append("&filterParameters=").Append(Uri.EscapeUriString(FilterConstructorParametersInJson));
+			}
+
+			if(CutoffEtag != null)
+			{
+				path.Append("&cutOffEtag=").Append(CutoffEtag.Value.ToString());
 			}
 
 			var vars = GetCustomQueryStringVariables();
