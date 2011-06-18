@@ -333,7 +333,7 @@ namespace Raven.Http.Extensions
 				Guid result;
 				if (Guid.TryParse(etagAsString,out result))
 					return result;
-s				throw new BadRequestException("Could not parse cut off etag query parameter as guid");
+				throw new BadRequestException("Could not parse cut off etag query parameter as guid");
 			}
 			return null;
 		}
