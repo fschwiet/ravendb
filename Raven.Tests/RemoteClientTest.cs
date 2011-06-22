@@ -9,6 +9,9 @@ using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Layout;
 using Newtonsoft.Json.Linq;
 using Raven.Client.Document;
 using Raven.Client.Indexes;
@@ -27,22 +30,25 @@ namespace Raven.Tests
 		protected const string DbDirectory = @".\TestDb\";
 		protected const string DbName = DbDirectory + @"DocDb.esb";
 
-		protected RavenDbServer GetNewServer(ComposablePartCatalog catalog = null)
-		{
-			var ravenConfiguration = new RavenConfiguration
-			{
-				Port = 8080,
-				RunInMemory = true,
-				DataDirectory = "Data",
-				AnonymousUserAccessMode = AnonymousUserAccessMode.All
-			};
+        protected RavenDbServer GetNewServer()
+        {
+        	var ravenConfiguration = new RavenConfiguration
+        	{
+        		Port = 8080,
+        		RunInMemory = true,
+        		DataDirectory = "Data",
+        		AnonymousUserAccessMode = AnonymousUserAccessMode.All
+        	};
 
 			if (catalog != null)
 				ravenConfiguration.Catalog.Catalogs.Add(catalog);
 
 			ConfigureServer(ravenConfiguration);
 
-			var ravenDbServer = new RavenDbServer(ravenConfiguration);
+			if(ravenConfiguration.RunInMemory == false)
+				IOExtensions.DeleteDirectory(ravenConfiguration.DataDirectory);
+
+        	var ravenDbServer = new RavenDbServer(ravenConfiguration);
 
 			using (var documentStore = new DocumentStore
 			{

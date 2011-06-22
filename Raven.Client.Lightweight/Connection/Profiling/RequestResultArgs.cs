@@ -5,6 +5,9 @@ namespace Raven.Client.Connection.Profiling
 	/// <summary>
 	/// The result of a request made to the server
 	/// </summary>
+#if !SILVERLIGHT
+	[Serializable]
+#endif
 	public class RequestResultArgs : EventArgs
 	{
 		/// <summary>
@@ -18,7 +21,7 @@ namespace Raven.Client.Connection.Profiling
 		/// <summary>
 		/// When the request completed
 		/// </summary>
-		public DateTime At { get; private set; }
+		public DateTime At { get; set; }
 		/// <summary>
 		/// The request status
 		/// </summary>
