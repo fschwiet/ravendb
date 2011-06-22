@@ -162,9 +162,12 @@
     <Compile Include="Bugs\CanReadLuceneProjectedDateTimeOffset.cs" />
     <Compile Include="Bugs\ComplexDynamicQuery.cs" />
     <Compile Include="Bugs\ConnectionStringParsing.cs" />
+    <Compile Include="Bugs\CreateIndexesRemotely.cs" />
     <Compile Include="Bugs\DateFilter.cs" />
+    <Compile Include="Bugs\DeletingDynamics.cs" />
     <Compile Include="Bugs\DuplicatedFiledNames.cs" />
     <Compile Include="Bugs\EntitiesWithAttributes.cs" />
+    <Compile Include="Bugs\EnumsCastToInts.cs" />
     <Compile Include="Bugs\Indexing\CanIndexNestedObjects.cs" />
     <Compile Include="Bugs\Indexing\CanIndexWithCharLiteral.cs" />
     <Compile Include="Bugs\IndexSelectionForMapReduce.cs" />
@@ -172,10 +175,13 @@
     <Compile Include="Bugs\IteratingTwice.cs" />
     <Compile Include="Bugs\Iulian\CanReadEntityWithUrlId.cs" />
     <Compile Include="Bugs\LinqOnDictionary.cs" />
+    <Compile Include="Bugs\LuceneQueryShouldNotModifyDynamicDocument.cs" />
+    <Compile Include="Bugs\ManyDocumentsViaDTC.cs" />
     <Compile Include="Bugs\MassivelyMultiTenant.cs" />
     <Compile Include="Bugs\MixingIdentityAndAssignedIds.cs" />
     <Compile Include="Bugs\MultipleRangeQueries.cs" />
     <Compile Include="Bugs\NullableDateTime.cs" />
+    <Compile Include="Bugs\Profiling.cs" />
     <Compile Include="Bugs\ProjectionFromDynamicIndex.cs" />
     <Compile Include="Bugs\Queries\Floats.cs" />
     <Compile Include="Bugs\Queries\Generics.cs" />
@@ -400,6 +406,7 @@
     <Compile Include="Bugs\VeryBigResultSetRemote.cs" />
     <Compile Include="Bugs\Vlko\QueryWithMultipleWhere.cs" />
     <Compile Include="Bugs\Vlko\RelationIdIndex.cs" />
+    <Compile Include="Bugs\WaitForNonStaleResultsAsOfLastWrite.cs" />
     <Compile Include="Bugs\WhenRavenClrTypeNotFound.cs" />
     <Compile Include="Bugs\WhereEntityIs.cs" />
     <Compile Include="Bugs\WillNotFailSystemIfServerIsNotAvailableOnStartup.cs" />
