@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Raven.Client.Indexes;
 using Xunit;
@@ -101,5 +102,54 @@ namespace Raven.Tests.Bugs
 
 			}
 		}
+
+        [Fact]
+        public void WillWaitForDeletes()
+        {
+            using (var store = NewDocumentStore("esent", false))
+            {
+                string id;
+                using (var session = store.OpenSession())
+                {
+                    var entity = new User() { Name = "admin"};
+                    session.Store(entity);
+                    session.Store(new User() {Name = "another"});
+                    session.SaveChanges();
+                    id = entity.Id;
+                }
+
+                using (var session = store.OpenSession())
+                {
+                    var count = session.Query<User>().Where(u => u.Name.Equals("admin")).ToArray().Count();
+                    Assert.Equal(1, count);
+                    Console.WriteLine(store.GetLastWrittenEtag());
+
+                }
+
+                //using (var session = store.OpenSession())
+                //{
+                //    for(var i = 0; i < 1000; i++)
+                //    {
+                //        session.Store(new User() {Age = i});
+                //    }
+                //    session.SaveChanges();
+                //}
+
+                using(var session = store.OpenSession())
+                {
+                    var user = session.Load<User>(id);
+                    session.Delete(user);
+                    session.SaveChanges();
+                }
+
+                Console.WriteLine(store.GetLastWrittenEtag());
+
+                using (var session = store.OpenSession())
+                {
+                    var count = session.Query<User>().Customize(q => q.WaitForNonStaleResultsAsOfLastWrite()).Where(u => u.Name.Equals("admin")).ToArray().Count();
+                    Assert.Equal(0, count);
+                }
+            }
+        }
 	}
 }
