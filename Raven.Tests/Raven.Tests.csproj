@@ -192,6 +192,7 @@
     <Compile Include="Bugs\MetadataIssues.cs" />
     <Compile Include="Bugs\Metadata\Querying.cs" />
     <Compile Include="Bugs\MultiMap\Errors.cs" />
+    <Compile Include="Bugs\MultiMap\GroupedByAlternateKeyMultimapReduce.cs" />
     <Compile Include="Bugs\MultiMap\MultiMapReduce.cs" />
     <Compile Include="Bugs\MultiMap\SimpleMultiMap.cs" />
     <Compile Include="Bugs\OfflineConcurrency.cs" />
