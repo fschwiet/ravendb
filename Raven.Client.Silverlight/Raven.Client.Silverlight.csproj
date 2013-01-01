@@ -1225,6 +1225,9 @@
     <Compile Include="..\Raven.Abstractions\Data\QueryResult.cs">
       <Link>Imports\Data\QueryResult.cs</Link>
     </Compile>
+    <Compile Include="..\Raven.Abstractions\Indexing\SortFieldAggregation.cs">
+      <Link>Imports\Indexing\SortFieldAggregation.cs</Link>
+    </Compile>
     <Compile Include="..\Raven.Abstractions\Indexing\SortOptions.cs">
       <Link>Imports\Indexing\SortOptions.cs</Link>
     </Compile>

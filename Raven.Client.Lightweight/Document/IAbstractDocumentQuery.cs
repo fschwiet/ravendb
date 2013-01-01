@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Raven.Abstractions.Data;
+using Raven.Abstractions.Indexing;
 using Raven.Client.Linq;
 
 namespace Raven.Client.Document
@@ -59,6 +60,12 @@ namespace Raven.Client.Document
 		/// <param name = "descending">if set to <c>true</c> [descending].</param>
 		/// <param name = "fieldType">the type of the field to be sorted.</param>
 		void AddOrder(string fieldName, bool descending, Type fieldType);
+
+		/// <summary>
+		///   Decides how the values of multiple sort fields are applied.  By default, the earlier field values take precedence.
+		/// </summary>
+		/// <param name="strategy">Strategy used when applying sort field values.</param>
+		void UseSortFieldsWith(SortFieldAggregation strategy);
 
 		/// <summary>
 		///   Includes the specified path in the query, loading the document specified in that path

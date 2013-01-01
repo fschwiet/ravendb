@@ -110,7 +110,11 @@ namespace Raven.Client.Document
 		/// </summary>
 		protected string[] orderByFields = new string[0];
 
-
+		/// <summary>
+		///   Changes how multiple sort fields affect sort order.
+		/// </summary>
+		protected SortFieldAggregation sortyByAggregation = SortFieldAggregation.Default;
+		
 		/// <summary>
 		///   The types to sort the fields by (NULL if not specified)
 		/// </summary>
@@ -287,6 +291,7 @@ namespace Raven.Client.Document
 			conventions = other.conventions;
 			cutoff = other.cutoff;
 			orderByFields = other.orderByFields;
+			sortyByAggregation = other.sortyByAggregation;
 			sortByHints = other.sortByHints;
 			pageSize = other.pageSize;
 			queryText = other.queryText;
@@ -642,6 +647,15 @@ namespace Raven.Client.Document
 			fieldName = descending ? "-" + fieldName : fieldName;
 			orderByFields = orderByFields.Concat(new[] { fieldName }).ToArray();
 			sortByHints.Add(new KeyValuePair<string, Type>(fieldName, fieldType));
+		}
+
+		/// <summary>
+		///   Decides how the values of multiple sort fields are applied.  By default, the earlier field values take precedence.
+		/// </summary>
+		/// <param name="strategy">Strategy used when applying sort field values.</param>
+		public void UseSortFieldsWith(SortFieldAggregation strategy)
+		{
+			sortyByAggregation = strategy;
 		}
 
 #if !SILVERLIGHT
