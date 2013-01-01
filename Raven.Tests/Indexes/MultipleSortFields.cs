@@ -16,16 +16,34 @@ namespace Raven.Tests.Indexes
             public string Name;
             public int OriginalOrder;
             public int SubOriginalOrder;
+            public DateTime OriginalDate;
+            public DateTime SubOriginalDate;
         }
 
         public class ItemIndex : AbstractIndexCreationTask<Item>
         {
             public ItemIndex()
             {
-                Map = items => from item in items select new {item.OriginalOrder, item.SubOriginalOrder};
+                Map = items => from item in items
+                               select new
+                               {
+                                   item.OriginalOrder,
+                                   item.SubOriginalOrder,
+                                   OriginalDate = Math.Floor(TimeSpan.FromTicks(item.OriginalDate.Ticks - new DateTime(1990, 1, 1).Ticks).TotalSeconds),
+                                   SubOriginalDate = Math.Floor(TimeSpan.FromTicks(item.SubOriginalDate.Ticks - new DateTime(1990, 1, 1).Ticks).TotalSeconds)
+                               };
 
+                //  Store is required for SortFieldAggregation.UseMinimum/SortFieldAggregation.UseMaximum
+                //  but not SortFieldAggregation.InOrder.  Can this be improved?  (give error warnings when not stored, or use Sort() instead, etc)
                 Store(i => i.OriginalOrder, FieldStorage.Yes);
                 Store(i => i.SubOriginalOrder, FieldStorage.Yes);
+
+                //  I'd like a way to use DAteTime values natively here, but since CustomScoreProvider uses float precision
+                //  and people may be working with different precisions / date ranges, then no good solution exists.
+
+                //  I was hoping for precision including seconds, but only was able to get minute precision so far.
+                Store(i => i.OriginalDate, FieldStorage.Yes);
+                Store(i => i.SubOriginalDate, FieldStorage.Yes);
             }
         }
 
@@ -85,22 +103,65 @@ namespace Raven.Tests.Indexes
 
                 using (var session = store.OpenSession())
                 {
-                    var originalOrder = session.Advanced.LuceneQuery<Item, ItemIndex>()
+                    var results = session.Advanced.LuceneQuery<Item, ItemIndex>()
                                                .OrderBy("OriginalOrder", "SubOriginalOrder")
                                                .UseSortFieldsWith(SortFieldAggregation.UseMinimum)
                                                .Select(d => d.Name).ToArray();
 
-                    Assert.Equal(new[] { "e", "d", "c", "b", "a" }, originalOrder);
+                    Assert.Equal(new[] { "e", "d", "c", "b", "a" }, results);
                 }
 
                 using (var session = store.OpenSession())
                 {
-                    var originalOrder = session.Advanced.LuceneQuery<Item, ItemIndex>()
+                    var results = session.Advanced.LuceneQuery<Item, ItemIndex>()
                                                .OrderBy("OriginalOrder", "SubOriginalOrder")
                                                .UseSortFieldsWith(SortFieldAggregation.UseMaximum)
                                                .Select(d => d.Name).ToArray();
 
-                    Assert.Equal(new[] { "a", "b", "c", "d", "e" }, originalOrder);
+                    Assert.Equal(new[] { "a", "b", "c", "d", "e" }, results);
+                }
+            }
+        }
+
+        [Fact]
+        public void CanUseMinMaxOfDateFields()
+        {
+            using (var store = NewDocumentStore())
+            {
+                new ItemIndex().Execute(store);
+
+                var now = DateTime.UtcNow;
+
+                using (var session = store.OpenSession())
+                {
+                    session.Store(new Item() { Name = "a", OriginalDate = now.AddMinutes(-5), SubOriginalDate = now.AddMinutes(5) });
+                    session.Store(new Item() { Name = "b", OriginalDate = now.AddMinutes(4), SubOriginalDate = now.AddMinutes(-4) });
+                    session.Store(new Item() { Name = "c", OriginalDate = now.AddMinutes(-3), SubOriginalDate = now.AddMinutes(3) });
+                    session.Store(new Item() { Name = "d", OriginalDate = now.AddMinutes(2), SubOriginalDate = now.AddMinutes(-2) });
+                    session.Store(new Item() { Name = "e", OriginalDate = now.AddMinutes(-1), SubOriginalDate = now.AddMinutes(1) });
+                    session.SaveChanges();
+                }
+
+                WaitForIndexing(store);
+
+                using (var session = store.OpenSession())
+                {
+                    var results = session.Advanced.LuceneQuery<Item, ItemIndex>()
+                                               .OrderBy("OriginalDate", "SubOriginalDate")
+                                               .UseSortFieldsWith(SortFieldAggregation.UseMinimum)
+                                               .Select(d => d.Name).ToArray();
+
+                    Assert.Equal(new[] { "e", "d", "c", "b", "a" }, results);
+                }
+
+                using (var session = store.OpenSession())
+                {
+                    var results = session.Advanced.LuceneQuery<Item, ItemIndex>()
+                                               .OrderBy("OriginalDate", "SubOriginalDate")
+                                               .UseSortFieldsWith(SortFieldAggregation.UseMaximum)
+                                               .Select(d => d.Name).ToArray();
+
+                    Assert.Equal(new[] { "a", "b", "c", "d", "e" }, results);
                 }
             }
         }
