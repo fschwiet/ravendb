@@ -18,6 +18,7 @@ using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
+using Lucene.Net.Search.Function;
 using Lucene.Net.Store;
 using Raven.Abstractions;
 using Raven.Abstractions.Data;
@@ -28,6 +29,7 @@ using Raven.Abstractions.Logging;
 using Raven.Abstractions.MEF;
 using Raven.Database.Data;
 using Raven.Database.Extensions;
+using Raven.Database.Indexing.Sorting;
 using Raven.Database.Linq;
 using Raven.Database.Plugins;
 using Raven.Database.Storage;
@@ -1090,7 +1092,12 @@ namespace Raven.Database.Indexing
 					else if (indexQuery.SortByAggregation == SortFieldAggregation.UseMaximum
 							 || indexQuery.SortByAggregation == SortFieldAggregation.UseMinimum)
 					{
-						
+						var minMaxSortAggregationQuery = new AggregateFieldsScoreQuery(
+							luceneQuery, 
+							indexQuery.SortedFields.Select(f => f.Field).ToArray(), 
+							indexQuery.SortByAggregation);
+
+						return indexSearcher.Search(minMaxSortAggregationQuery, null, minPageSize);
 					}
 				}
 
