@@ -484,6 +484,12 @@ If you really want to do in memory filtering on the data returned from the query
 		TSelf AddOrder (string fieldName, bool descending, Type fieldType);
 
 		/// <summary>
+		///   Decides how the values of multiple sort fields are applied.  By default, the earlier field values take precedence.
+		/// </summary>
+		/// <param name="strategy">Strategy used when applying sort field values.</param>
+		TSelf UseSortFieldsWith(SortFieldAggregation strategy);
+
+		/// <summary>
 		///   Simplified method for opening a new clause within the query
 		/// </summary>
 		/// <returns></returns>

@@ -741,6 +741,12 @@ namespace Raven.Client.Document
 			return this;
 		}
 
+		IAsyncDocumentQuery<T> IDocumentQueryBase<T, IAsyncDocumentQuery<T>>.UseSortFieldsWith(SortFieldAggregation strategy)
+		{
+			sortByAggregation = strategy;
+			return this;
+		}
+
 		/// <summary>
 		/// Simplified method for opening a new clause within the query
 		/// </summary>
