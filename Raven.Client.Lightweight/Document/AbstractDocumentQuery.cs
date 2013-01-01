@@ -113,7 +113,7 @@ namespace Raven.Client.Document
 		/// <summary>
 		///   Changes how multiple sort fields affect sort order.
 		/// </summary>
-		protected SortFieldAggregation sortyByAggregation = SortFieldAggregation.Default;
+		protected SortFieldAggregation sortByAggregation = SortFieldAggregation.Default;
 		
 		/// <summary>
 		///   The types to sort the fields by (NULL if not specified)
@@ -291,7 +291,7 @@ namespace Raven.Client.Document
 			conventions = other.conventions;
 			cutoff = other.cutoff;
 			orderByFields = other.orderByFields;
-			sortyByAggregation = other.sortyByAggregation;
+			sortByAggregation = other.sortByAggregation;
 			sortByHints = other.sortByHints;
 			pageSize = other.pageSize;
 			queryText = other.queryText;
@@ -655,7 +655,7 @@ namespace Raven.Client.Document
 		/// <param name="strategy">Strategy used when applying sort field values.</param>
 		public void UseSortFieldsWith(SortFieldAggregation strategy)
 		{
-			sortyByAggregation = strategy;
+			sortByAggregation = strategy;
 		}
 
 #if !SILVERLIGHT
@@ -1536,6 +1536,7 @@ If you really want to do in memory filtering on the data returned from the query
 					Cutoff = cutoff,
 					CutoffEtag = cutoffEtag,
 					SortedFields = orderByFields.Select(x => new SortedField(x)).ToArray(),
+					SortByAggregation = sortByAggregation,
 					FieldsToFetch = fieldsToFetch,
 					SpatialFieldName = spatialFieldName,
 					QueryShape = queryShape,
@@ -1556,6 +1557,7 @@ If you really want to do in memory filtering on the data returned from the query
 				Cutoff = cutoff,
 				CutoffEtag = cutoffEtag,
 				SortedFields = orderByFields.Select(x => new SortedField(x)).ToArray(),
+				SortByAggregation = sortByAggregation,
 				FieldsToFetch = fieldsToFetch,
 				DefaultField = defaultField,
 				DefaultOperator = defaultOperator

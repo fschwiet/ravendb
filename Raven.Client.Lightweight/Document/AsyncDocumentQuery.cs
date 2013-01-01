@@ -674,6 +674,7 @@ namespace Raven.Client.Document
 											theWaitForNonStaleResults = theWaitForNonStaleResults,
 											sortByHints = sortByHints,
 											orderByFields = orderByFields,
+											sortByAggregation = sortByAggregation,
 											groupByFields = groupByFields,
 											aggregationOp = aggregationOp,
 											transformResultsFunc = transformResultsFunc,

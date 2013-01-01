@@ -46,6 +46,7 @@ namespace Raven.Abstractions.Data
 			PageSize = query.PageSize;
 			FieldsToFetch = query.FieldsToFetch;
 			SortedFields = query.SortedFields;
+			SortByAggregation = query.SortByAggregation;
 		}
 
 		/// <summary>

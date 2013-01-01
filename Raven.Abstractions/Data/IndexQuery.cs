@@ -7,6 +7,7 @@ using System;
 using System.Globalization;
 using System.Text;
 using Raven.Abstractions.Extensions;
+using Raven.Abstractions.Indexing;
 
 namespace Raven.Abstractions.Data
 {
@@ -70,6 +71,11 @@ namespace Raven.Abstractions.Data
 		/// </summary>
 		/// <value>The sorted fields.</value>
 		public SortedField[] SortedFields { get; set; }
+
+		/// <summary>
+		/// Gets or sets SortByAggregation
+		/// </summary>
+		public SortFieldAggregation SortByAggregation = SortFieldAggregation.Default;
 
 		/// <summary>
 		/// Gets or sets the cutoff date

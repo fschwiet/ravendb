@@ -43,8 +43,17 @@ namespace Raven.Studio.Features.Query
                 SortedFields = fields["sort"]
                     .EmptyIfNull()
                     .Select(x => new SortedField(x))
-                    .ToArray()
+                    .ToArray(),
+                SortByAggregation = SortFieldAggregation.Default
             };
+
+            SortFieldAggregation sortFieldAggregation;
+            var sortAggregationQuerystringValue = fields["sortAggregation"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(sortAggregationQuerystringValue) &&
+                SortFieldAggregation.TryParse(sortAggregationQuerystringValue, out sortFieldAggregation))
+            {
+                query.SortByAggregation = sortFieldAggregation;
+            }
 
             double lat = fields.GetLat(), lng = fields.GetLng(), radius = fields.GetRadius();
             if (lat != 0 || lng != 0 || radius != 0)
