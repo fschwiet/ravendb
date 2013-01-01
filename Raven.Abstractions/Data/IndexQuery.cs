@@ -187,12 +187,15 @@ namespace Raven.Abstractions.Data
 			SortedFields.ApplyIfNotNull(
 				field => path.Append("&sort=").Append(field.Descending ? "-" : "").Append(Uri.EscapeDataString(field.Field)));
 
+			if (SortByAggregation != SortFieldAggregation.Default)
+			{
+				path.Append("&sortAggregation=" + SortByAggregation);
+			}
 			
-			
-            if (SkipTransformResults)
-            {
-                path.Append("&skipTransformResults=true");
-            }
+			if (SkipTransformResults)
+			{
+				path.Append("&skipTransformResults=true");
+			}
 
 			if (Cutoff != null)
 			{

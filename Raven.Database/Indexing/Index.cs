@@ -1057,8 +1057,6 @@ namespace Raven.Database.Indexing
 			private TopDocs ExecuteQuery(IndexSearcher indexSearcher, Query luceneQuery, int start, int pageSize,
 										IndexQuery indexQuery)
 			{
-				var sort = indexQuery.GetSort(parent.indexDefinition);
-
 				if (pageSize == Int32.MaxValue) // we want all docs
 				{
 					var gatherAllCollector = new GatherAllCollector();
@@ -1067,21 +1065,35 @@ namespace Raven.Database.Indexing
 				}
 				var minPageSize = Math.Max(pageSize + start, 1);
 
-				// NOTE: We get Start + Pagesize results back so we have something to page on
-				if (sort != null)
+				if (indexQuery.SortedFields != null || indexQuery.SortedFields.Count() > 0)
 				{
-					try
+					if (indexQuery.SortByAggregation == SortFieldAggregation.UseInOrder)
 					{
-						//indexSearcher.SetDefaultFieldSortScoring (sort.GetSort().Contains(SortField.FIELD_SCORE), false);
-						indexSearcher.SetDefaultFieldSortScoring(true, false);
-						var ret = indexSearcher.Search(luceneQuery, null, minPageSize, sort);
-						return ret;
+						Sort sort = indexQuery.GetSort(parent.indexDefinition);
+
+						// NOTE: We get Start + Pagesize results back so we have something to page on
+						if (sort != null)
+						{
+							try
+							{
+								//indexSearcher.SetDefaultFieldSortScoring (sort.GetSort().Contains(SortField.FIELD_SCORE), false);
+								indexSearcher.SetDefaultFieldSortScoring(true, false);
+								var ret = indexSearcher.Search(luceneQuery, null, minPageSize, sort);
+								return ret;
+							}
+							finally
+							{
+								indexSearcher.SetDefaultFieldSortScoring(false, false);
+							}
+						}
 					}
-					finally
+					else if (indexQuery.SortByAggregation == SortFieldAggregation.UseMaximum
+							 || indexQuery.SortByAggregation == SortFieldAggregation.UseMinimum)
 					{
-						indexSearcher.SetDefaultFieldSortScoring(false, false);
+						
 					}
 				}
+
 				return indexSearcher.Search(luceneQuery, null, minPageSize);
 			}
 		}
