@@ -18,6 +18,7 @@ using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
+using Lucene.Net.Search.Function;
 using Lucene.Net.Store;
 using Raven.Abstractions;
 using Raven.Abstractions.Data;
@@ -772,7 +773,6 @@ namespace Raven.Database.Indexing
 					{
 						var luceneQuery = ApplyIndexTriggers(GetLuceneQuery());
 
-
 						int start = indexQuery.Start;
 						int pageSize = indexQuery.PageSize;
 						int returnedResults = 0;
@@ -1040,8 +1040,58 @@ namespace Raven.Database.Indexing
 						DisposeAnalyzerAndFriends(toDispose, searchAnalyzer);
 					}
 				}
-				return luceneQuery;
+
+                return new CustomQuery(luceneQuery);
 			}
+
+            public class CustomQuery : CustomScoreQuery
+            {
+                public CustomQuery(Query subQuery) : base(subQuery)
+                {
+                }
+
+                public CustomQuery(Query subQuery, ValueSourceQuery valSrcQuery) : base(subQuery, valSrcQuery)
+                {
+                }
+
+                public CustomQuery(Query subQuery, params ValueSourceQuery[] valSrcQueries) : base(subQuery, valSrcQueries)
+                {
+                }
+
+                protected override CustomScoreProvider GetCustomScoreProvider(IndexReader reader)
+                {
+                    return new CustomScorer(reader);
+                }
+            }
+
+            public class CustomScorer : CustomScoreProvider
+            {
+                public CustomScorer(IndexReader reader) : base(reader)
+                {
+                }
+
+                public override Explanation CustomExplain(int doc, Explanation subQueryExpl, Explanation valSrcExpl)
+                {
+                    return base.CustomExplain(doc, subQueryExpl, valSrcExpl);
+                }
+
+                public override float CustomScore(int doc, float subQueryScore, float[] valSrcScores)
+                {
+                    var fields = new[]
+                    {
+                        reader.Document(doc).GetField("Values1"), reader.Document(doc).GetField("Values2"),
+                        reader.Document(doc).GetField("Values3")
+                    };
+
+                    var score =
+                        fields.Where(f => f != null).Select(f => DateTime.Parse(f.StringValue)).OrderByDescending(t => t).Take(1);
+
+                    if (score.Any())
+                        return score.First().Ticks;
+                    else
+                        return base.CustomScore(doc, subQueryScore, valSrcScores);
+                }
+            }
 
 			private static void DisposeAnalyzerAndFriends(List<Action> toDispose, PerFieldAnalyzerWrapper analyzer)
 			{

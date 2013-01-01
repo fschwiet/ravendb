@@ -12,6 +12,7 @@ namespace Raven.Tests.Indexes
     {
         public class Item
         {
+            public int Id;
             public Dictionary<int, DateTime> Values = new Dictionary<int, DateTime>();
         }
 
@@ -33,8 +34,9 @@ namespace Raven.Tests.Indexes
             {
                 using (var session = store.OpenSession())
                 {
-                    session.Store(new Item() { Values = {{1, DateTime.Now}, {2, DateTime.Now.AddDays(1)}}});
-                    session.Store(new Item() { Values = {{1, DateTime.Now}, {3, DateTime.Now.AddDays(-1)}}});
+                    session.Store(new Item() { Id = 1, Values = {{1, DateTime.Now}}});
+                    session.Store(new Item() { Id = 2, Values = { { 1, DateTime.Now.AddHours(1) }} });
+                    session.Store(new Item() { Id = 3, Values = { { 1, DateTime.Now.AddHours(-1) } } });
                     session.SaveChanges();
                 }
 
@@ -45,27 +47,11 @@ namespace Raven.Tests.Indexes
                     var v1 =
                         session.Advanced.LuceneQuery<Item, ItemIndex>()
                                .WaitForNonStaleResultsAsOfNow()
-                               .Where("Values1:*")
+                               .Where("Values1:*").OrderBy()
                                .ToArray();
 
-                    Assert.Equal(2, v1.Count());
-
-                    var v2 =
-                        session.Advanced.LuceneQuery<Item, ItemIndex>()
-                               .WaitForNonStaleResultsAsOfNow()
-                               .Where(" Values2:*")
-                               .OrderBy()
-                               .ToArray();
-
-                    Assert.Equal(1, v2.Count());
-
-                    var v3 =
-                        session.Advanced.LuceneQuery<Item, ItemIndex>()
-                               .WaitForNonStaleResultsAsOfNow()
-                               .Where("Values3:*")
-                               .ToArray();
-
-                    Assert.Equal(2, v3.Count());
+                    Assert.Equal(3, v1.Count());
+                    Assert.Equal(new [] {3,1,2}, v1.Select(d => d.Id));
                 }
             }
         }
